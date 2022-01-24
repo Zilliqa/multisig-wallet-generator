@@ -1,2 +1,1 @@
-# msw-autogen
-Zilliqa Multisig Wallet Generator
+# Zilliqa Multisig Wallet Generator
