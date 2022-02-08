@@ -16,7 +16,18 @@
   </a>
 </div>
 
-## Prerequisite
+## Prerequisites
+
+- [Docker](https://www.docker.com)
+- [Node.js](https://nodejs.org/en/)
+
+## Installation
+
+### `npm i`
+
+Installs the dependencies.
+
+## Usage
 
 ### Step 1. Annotate your transitions: `(* @multi-sig *)`
 
@@ -51,13 +62,7 @@ input/bar.scilla
 input/baz.scilla
 ```
 
-## Installation and Usage
-
-### `npm i`
-
-Installs the dependencies.
-
-### `npm run gen`
+### Step 3. Run `npm run gen`
 
 Generates your multi-sig wallet contract: `output/msw.scilla`
 
