@@ -72,6 +72,44 @@ Generates your multi-sig wallet contract: `output/msw.scilla`
 
 Runs contract tests using [Isolated Server container](https://hub.docker.com/r/zilliqa/zilliqa-isolated-server), [Jest](https://jestjs.io/), and [Scilla JSON Utils](https://github.com/Zilliqa/scilla-json-utils)
 
+## Constructing the parameters of `SubmitCustomTransaction`
+
+MultiSigTransition ADT
+
+```ocaml
+type MultiSigTransition =
+  | Allow of (List (ByStr20))
+  | Disallow of (List (ByStr20))
+```
+
+Example parameters
+
+```json
+[
+  {
+    "type": "ByStr20",
+    "value": "0x0c4769cddb5e54683126c33b116c5ff9765c2ac3",
+    "vname": "contract_address"
+  },
+  {
+    "type": "0xf6241e9d6b033847e814e6cc7022fa1360fe4fe3.MultiSigTransition",
+    "value": {
+      "argtypes": [],
+      "arguments": [
+        [
+          "0x268fb34ad21aa21b02ff9ad77f29d2f08dabeb93",
+          "0xa3755a10dba7bbe77770c620041b442c624be0a1"
+        ]
+      ],
+      "constructor": "0xf6241e9d6b033847e814e6cc7022fa1360fe4fe3.Allow"
+    },
+    "vname": "transaction"
+  }
+]
+```
+
+_Consider using [Scilla JSON Utils](https://github.com/Zilliqa/scilla-json-utils) to construct the above JSON values._
+
 ## License
 
 This project is open source software licensed as [GPL-3.0](./LICENSE).
