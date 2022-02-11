@@ -66,6 +66,10 @@ input/baz.scilla
 
 Generates your multi-sig wallet contract: `output/msw.scilla`
 
+During the contract generation, it makes API calls to `https://scilla-server.zilliqa.com/contract/check`.
+
+To avoid this behavior, run `npm run gen:docker`. It uses [Isolated Server container](https://hub.docker.com/r/zilliqa/zilliqa-isolated-server).
+
 ## Contract Testing
 
 ### `npm test`
