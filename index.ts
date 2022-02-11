@@ -2,38 +2,65 @@ import path from "path";
 import fs from "fs";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { exit } from "process";
 
 const execAsync = promisify(exec);
 
-const getTransitionInfo = async (container, src) => {
+import axios from "axios";
+
+const CHECKER_API_URL = "https://scilla-server.zilliqa.com/contract/check";
+
+const checkWithAPI = async (src) => {
   try {
-    const contractFilename = src.split("/").pop();
-    const scillaPath = "/scilla/0/";
-    const paths = {
-      checker: `${scillaPath}bin/scilla-checker`,
-      stdlib: `${scillaPath}src/stdlib`,
-      dest: `${scillaPath}${contractFilename}`,
-    };
+    const code = fs.readFileSync(src).toString();
+    const res = await axios.post(CHECKER_API_URL, { code });
+    return JSON.parse(res.data.message);
+  } catch (error: any) {
+    if (error.toJSON().status === 400) {
+      throw new Error(`Failed to type-check ${src}`);
+    }
+  }
+};
 
-    await execAsync(`docker cp ${src} ${container}:${paths.dest}`);
+const checkWithContainer = async (container, src) => {
+  const contractFilename = src.split("/").pop();
+  const scillaPath = "/scilla/0/";
+  const paths = {
+    checker: `${scillaPath}bin/scilla-checker`,
+    stdlib: `${scillaPath}src/stdlib`,
+    dest: `${scillaPath}${contractFilename}`,
+  };
 
-    const cmd = [
-      "docker exec",
-      container,
-      paths.checker,
-      "-libdir",
-      paths.stdlib,
-      "-gaslimit",
-      "999999999",
-      paths.dest,
-      "-contractinfo",
-    ].join(" ");
+  await execAsync(`docker cp ${src} ${container}:${paths.dest}`);
 
-    const res = await execAsync(cmd);
-    const msg = JSON.parse(res.stdout);
-    return msg.contract_info.transitions;
+  const cmd = [
+    "docker exec",
+    container,
+    paths.checker,
+    "-libdir",
+    paths.stdlib,
+    "-gaslimit",
+    "999999999",
+    paths.dest,
+    "-contractinfo",
+  ].join(" ");
+
+  const res = await execAsync(cmd);
+  const msg = JSON.parse(res.stdout);
+  return msg;
+};
+
+const checkContract = async (container, src) => {
+  try {
+    const result =
+      container !== undefined
+        ? await checkWithContainer(container, src)
+        : await checkWithAPI(src);
+
+    return result;
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    exit(1);
   }
 };
 
@@ -107,9 +134,10 @@ const genCodes = async (containerName, codePaths) => {
 
   const transitions = (
     await Promise.all(
-      codePaths.map((path) => getTransitionInfo(containerName, path))
+      codePaths.map((path) => checkContract(containerName, path))
     )
   )
+    .map((x) => x.contract_info.transitions)
     .flat()
     .filter((cur) => allowlist.includes(cur.vname))
     .map((cur) => {
@@ -159,6 +187,7 @@ const genContract = async (
   }
   const output = mergeCodes(template, codes);
   fs.writeFileSync(outputPath, output);
+  await checkContract(containerName, outputPath);
 };
 
 const mswTemplate = `(* SPDX-License-Identifier: GPL-3.0 *)
