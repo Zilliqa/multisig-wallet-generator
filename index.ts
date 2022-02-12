@@ -16,9 +16,11 @@ const checkWithAPI = async (src) => {
     const res = await axios.post(CHECKER_API_URL, { code });
     return JSON.parse(res.data.message);
   } catch (error: any) {
-    if (error.toJSON().status === 400) {
-      throw new Error(`Failed to type-check ${src}`);
-    }
+    throw new Error(
+      error.response?.data?.message
+        ? JSON.stringify(error.response.data.message)
+        : error
+    );
   }
 };
 
