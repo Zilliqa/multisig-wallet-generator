@@ -11,6 +11,8 @@ const MULTI_SIG_TRANSITION_PREFIX = "T_";
 
 const CHECKER_API_URL = "https://scilla-server.zilliqa.com/contract/check";
 
+const isLowerCase = (c) => c === c.toLowerCase();
+
 const checkWithAPI = async (src) => {
   try {
     const code = fs.readFileSync(src).toString();
@@ -90,6 +92,9 @@ const getTransitionNames = (code) => {
 
 const getTypeDef = (transtions) => {
   const arms = Object.keys(transtions).map((transitionName) => {
+    const prefix = isLowerCase(transitionName[0])
+      ? MULTI_SIG_TRANSITION_PREFIX
+      : "";
     const params = transtions[transitionName];
     const struct =
       params.length === 0
@@ -98,7 +103,7 @@ const getTypeDef = (transtions) => {
             .map((x) => "(" + x.type + ")")
             .join(" ")
             .trim()}`;
-    return `| ${MULTI_SIG_TRANSITION_PREFIX}${transitionName}${struct}`;
+    return `| ${prefix}${transitionName}${struct}`;
   });
 
   const pre = `type MultiSigTransition = \n  `;
@@ -109,6 +114,7 @@ const getTypeDef = (transtions) => {
 const getMsgFnDef = (transtions) => {
   const arms = Object.keys(transtions).map((key) => {
     const vnames = transtions[key].filter((x) => x).map((x) => x.vname);
+    const prefix = isLowerCase(key[0]) ? MULTI_SIG_TRANSITION_PREFIX : "";
     const params =
       vnames.length === 0
         ? ""
@@ -117,7 +123,7 @@ const getMsgFnDef = (transtions) => {
             .join(";\n")
             .trim()};`;
 
-    return `| ${MULTI_SIG_TRANSITION_PREFIX}${key}${
+    return `| ${prefix}${key}${
       vnames.length === 0 ? "" : " " + vnames.join(" ").trim()
     } => {${params}\n      _tag: "${key}"; _amount: Uint128 0; _recipient: r\n    }`;
   });
