@@ -3,10 +3,11 @@ import fs from "fs";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { exit } from "process";
+import axios from "axios";
 
 const execAsync = promisify(exec);
 
-import axios from "axios";
+const MULTI_SIG_TRANSITION_PREFIX = "T_";
 
 const CHECKER_API_URL = "https://scilla-server.zilliqa.com/contract/check";
 
@@ -97,7 +98,7 @@ const getTypeDef = (transtions) => {
             .map((x) => "(" + x.type + ")")
             .join(" ")
             .trim()}`;
-    return `| ${transitionName}${struct}`;
+    return `| ${MULTI_SIG_TRANSITION_PREFIX}${transitionName}${struct}`;
   });
 
   const pre = `type MultiSigTransition = \n  `;
@@ -116,7 +117,7 @@ const getMsgFnDef = (transtions) => {
             .join(";\n")
             .trim()};`;
 
-    return `| ${key}${
+    return `| ${MULTI_SIG_TRANSITION_PREFIX}${key}${
       vnames.length === 0 ? "" : " " + vnames.join(" ").trim()
     } => {${params}\n      _tag: "${key}"; _amount: Uint128 0; _recipient: r\n    }`;
   });
