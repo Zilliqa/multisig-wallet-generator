@@ -1,6 +1,11 @@
 {
-  "name": "msw-gen",
+  "name": "multisig-wallet-generator",
   "description": "Zilliqa Multi-Sig Wallet Generator",
+  "keywords": [
+    "zilliqa",
+    "scilla",
+    "multi-signature"
+  ],
   "scripts": {
     "run:isolated-server": "npm run rm:isolated-server; docker run --name zilliqa-msw-gen -d -p 3333:5555 --entrypoint isolatedServer zilliqa/zilliqa-isolated-server:a01fe00 -t 0 -f boot.json -u 0",
     "rm:isolated-server": "docker stop zilliqa-msw-gen | xargs docker rm",
