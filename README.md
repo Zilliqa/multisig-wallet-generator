@@ -8,8 +8,8 @@
 </div>
 <hr/>
 <div>
-  <a href="https://app.travis-ci.com/Zilliqa/msw-gen" target="_blank">
-  <img src="https://app.travis-ci.com/Zilliqa/msw-gen.svg?token=6BrmjBEqdaGp73khUJCz&branch=main" />
+  <a href="https://app.travis-ci.com/Zilliqa/multisig-wallet-generator" target="_blank">
+  <img src="https://app.travis-ci.com/Zilliqa/multisig-wallet-generator.svg?token=6BrmjBEqdaGp73khUJCz&branch=main" />
   </a>
   <a href="LICENSE" target="_blank">
   <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" />
