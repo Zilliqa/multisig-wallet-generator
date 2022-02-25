@@ -7,13 +7,13 @@
     "multi-signature"
   ],
   "scripts": {
-    "run:isolated-server": "npm run rm:isolated-server; docker run --name zilliqa-msw-gen -d -p 3333:5555 --entrypoint isolatedServer zilliqa/zilliqa-isolated-server:a01fe00 -t 0 -f boot.json -u 0",
+    "run:isolated-server": "npm run rm:isolated-server; docker run --name zilliqa-msw-gen -d -p 5555:5555 --entrypoint isolatedServer zilliqa/zilliqa-isolated-server:a01fe00 -t 0 -f boot.json -u 0",
     "rm:isolated-server": "docker stop zilliqa-msw-gen | xargs docker rm",
-    "test:local": "PORT=3333 CONTAINER=zilliqa-msw-gen jest --verbose --runInBand",
+    "gen:docker": "npm run run:isolated-server && CONTAINER=zilliqa-msw-gen ts-node index.ts",
+    "gen": "CHECKER_URL=https://scilla-server.zilliqa.com/contract/check ts-node index.ts",
+    "test:local": "CONTAINER=zilliqa-msw-gen jest --verbose --runInBand",
     "test": "npm run test:gen && npm run test:local && npm run rm:isolated-server",
-    "test:gen": "npm run run:isolated-server && CONTAINER=zilliqa-msw-gen INPUT=tests ts-node index.ts",
-    "gen:docker": "npm run run:isolated-server && CONTAINER=zilliqa-msw-gen INPUT=input ts-node index.ts",
-    "gen": "INPUT=input ts-node index.ts",
+    "test:gen": "CONTAINER=zilliqa-msw-gen INPUT_DIR=tests/ npm run gen:docker",
     "format": "npx prettier --write ."
   },
   "devDependencies": {

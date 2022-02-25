@@ -64,11 +64,21 @@ input/baz.scilla
 
 ### Step 3. Run `npm run gen`
 
-Generates your multi-sig wallet contract: `output/msw.scilla`
+Generates your multi-sig wallet contract: `output/msw.scilla` by default.
 
 During the contract generation, it makes API calls to `https://scilla-server.zilliqa.com/contract/check`.
 
-To avoid this behavior, run `npm run gen:docker`. It uses [Isolated Server container](https://hub.docker.com/r/zilliqa/zilliqa-isolated-server).
+To avoid this behavior, run `npm run gen:docker`. It uses [Isolated Server container](https://hub.docker.com/r/zilliqa/zilliqa-isolated-server) instead.
+
+## Environment Variables
+
+| Name          | Description                                                          | Default Value |
+| ------------- | -------------------------------------------------------------------- | ------------- |
+| `INPUT_DIR`   | A folder for the input contract with `(* @multi-sig *)` annotations. | `input/`      |
+| `OUTPUT_DIR`  | A folder for the generated multi-sig wallet contract.                | `output/`     |
+| `PORT`        | The port of Isolated Server container.                               | `5555`        |
+| `CONTAINER`   | The name of Isolated Server container.                               |               |
+| `CHECKER_URL` | The URL of Scilla Checker API.                                       |               |
 
 ## Contract Testing
 

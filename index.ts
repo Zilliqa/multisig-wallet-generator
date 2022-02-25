@@ -7,16 +7,29 @@ import axios from "axios";
 
 const execAsync = promisify(exec);
 
+const INPUT_DIR = process.env["INPUT_DIR"] || "input/";
+const OUTPUT_DIR = process.env["OUTPUT_DIR"] || "output/";
+const CONTAINER = process.env["CONTAINER"] as string;
+const CHECKER_URL = process.env["CHECKER_URL"] as string;
+
 const MULTI_SIG_TRANSITION_PREFIX = "T_";
 
-const CHECKER_API_URL = "https://scilla-server.zilliqa.com/contract/check";
-
 const isLowerCase = (c) => c === c.toLowerCase();
+
+const abort = () => {
+  console.log("⛔️ Abort contract generation");
+  exit(1);
+};
+const waitFor = (ms: number) => {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(undefined), ms);
+  });
+};
 
 const checkWithAPI = async (src) => {
   try {
     const code = fs.readFileSync(src).toString();
-    const res = await axios.post(CHECKER_API_URL, { code });
+    const res = await axios.post(CHECKER_URL, { code });
     return JSON.parse(res.data.message);
   } catch (error: any) {
     throw new Error(
@@ -57,15 +70,14 @@ const checkWithContainer = async (container, src) => {
 
 const checkContract = async (container, src) => {
   try {
-    const result =
-      container !== undefined
-        ? await checkWithContainer(container, src)
-        : await checkWithAPI(src);
-
-    return result;
+    if (container !== undefined) {
+      return await checkWithContainer(container, src);
+    }
+    return await checkWithAPI(src);
   } catch (error) {
     console.error(error);
-    exit(1);
+    console.log(`❌ Failed to check: ${src}`);
+    abort();
   }
 };
 
@@ -510,17 +522,57 @@ transition AddFunds()
 end
 `;
 
-const INPUT = process.env["INPUT"] as string;
-const CONTAINER = process.env["CONTAINER"] as string;
-const directoryPath = path.join(__dirname, INPUT);
+const directoryPath = path.join(__dirname, INPUT_DIR);
 
-fs.readdir(directoryPath, function (error, files) {
-  if (error) {
-    throw new Error(error.message);
+(async () => {
+  console.log("🚀 Start contract generation");
+
+  if (CONTAINER !== undefined) {
+    const maxAttempts = 5;
+    const delay = 3000; // Millisecond
+
+    for (let i = 0; i < maxAttempts; i++) {
+      try {
+        const res = await execAsync(
+          `docker container inspect --format='{{.State.Running}}' ${CONTAINER}`
+        );
+
+        if (res.stdout.includes("true")) {
+          break;
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
+      if (i === 0) {
+        console.log(`🐳 Container ${CONTAINER} is not running yet`);
+      }
+
+      console.log(`✨ Tries: (${i + 1}/${maxAttempts})`);
+
+      if (i === maxAttempts - 1) {
+        console.log(`❌ Container ${CONTAINER} is not running`);
+        abort();
+      }
+      console.log(`⏳ Retrying in ${delay} ms`);
+      await waitFor(delay);
+    }
   }
-  const inputFiles = files
-    .filter((x) => x.split(".").pop() === "scilla")
-    .map((file) => INPUT + "/" + file);
 
-  genContract(CONTAINER, mswTemplate, inputFiles, "output/msw.scilla");
-});
+  fs.readdir(directoryPath, async function (error, files) {
+    if (error) {
+      throw new Error(error.message);
+    }
+    const inputContracts = files.filter((x) => x.split(".").pop() === "scilla");
+    console.log(
+      `📃 Input Contracts (total: ${inputContracts.length}):\n`,
+      inputContracts.join("\n ")
+    );
+
+    const inputPaths = inputContracts.map((file) => INPUT_DIR + file);
+    const outputPath = OUTPUT_DIR + "msw.scilla";
+
+    await genContract(CONTAINER, mswTemplate, inputPaths, outputPath);
+    console.log("✅ Success: " + OUTPUT_DIR + "msw.scilla");
+  });
+})();
